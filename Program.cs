@@ -152,7 +152,9 @@ class ExpressoCLI
                     await cli.Alfred();
                     break;
                 default:
-                    throw new Exception("Unknown action: " + cli.action);
+                    Logger.LogError("No action specified");
+                    cli.PrintHelp();
+                    return 1;
             }
             return 0;
 
