@@ -342,6 +342,7 @@ class ExpressoCLI
 
             // {"jsonrpc": "2.0", "method": "XVPN.GetStatus", "params": {}, "id": 1}
             // {"jsonrpc": "2.0", "method": "XVPN.GetLocations", "params": { "include_default_location": true, "include_recent_connections": true }, "id": 1}
+            // {"jsonrpc": "2.0", "method": "XVPN.SelectLocation", "params": { "selected_location": { "name": "Germany", "is_country": true } }, "id": 1}
             // {"jsonrpc": "2.0", "method": "XVPN.Connect", "params": { "country": "Germany" }, "id": 1}
             // {"jsonrpc": "2.0", "method": "XVPN.Disconnect", "params": {}, "id": 1}
         }

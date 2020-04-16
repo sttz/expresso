@@ -59,9 +59,10 @@ public class ExpressVPNClient : NativeMessagingClient
     [Serializable]
     public struct SelectedLocation
     {
-        public bool is_coutry;
+        public bool is_country;
         public bool is_smart_location;
         public string name;
+        public string id;
     }
 
     [Serializable]
@@ -91,6 +92,14 @@ public class ExpressVPNClient : NativeMessagingClient
         public Location[] locations;
         public string[] recent_locations_ids;
         public string[] recommended_location_ids;
+    }
+
+    /// <summary>
+    /// Arguments for "XVPN.SelectLocation".
+    /// </summary>
+    public struct SelectArgs
+    {
+        public SelectedLocation selected_location;
     }
 
     /// <summary>
@@ -295,6 +304,27 @@ public class ExpressVPNClient : NativeMessagingClient
     {
         AssertHelperConnected();
 
+        // A SelectLocation required call is required for the browser extension
+        // to show the correct location
+        var source = new TaskCompletionSource<bool>();
+        Action handler = () => source.SetResult(true);
+        StatusUpdate += handler;
+
+        Call("XVPN.SelectLocation", new SelectArgs() {
+            selected_location = new SelectedLocation() {
+                id = args.id,
+                name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
+                is_country = !string.IsNullOrEmpty(args.country),
+                is_smart_location = args.is_default
+            }
+        });
+
+        try {
+            await WithTimeout(source.Task);
+        } finally {
+            StatusUpdate -= handler;
+        }
+
         Call("XVPN.Connect", args);
 
         float? progress = null;
@@ -394,6 +424,16 @@ public class ExpressVPNClient : NativeMessagingClient
                         } else if (messageName == "ConnectionProgress") {
                             var progress = data.Value<float>("progress");
                             ConnectionProgress?.Invoke(progress);
+                        } else if (messageName == "SelectedLocationChanged") {
+                            var info = LatestStatus;
+                            var selectedLocation = info.selected_location;
+                            selectedLocation.id = data.Value<string>("id");
+                            selectedLocation.name = data.Value<string>("name");
+                            selectedLocation.is_country = data.Value<bool>("is_country");
+                            selectedLocation.is_smart_location = data.Value<bool>("is_smart_location");
+                            info.selected_location = selectedLocation;
+                            LatestStatus = info;
+                            StatusUpdate?.Invoke();
                         } else {
                             Log.LogWarning($"Unhandled named message: {messageName}");
                         }
