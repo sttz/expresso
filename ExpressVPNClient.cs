@@ -304,25 +304,34 @@ public class ExpressVPNClient : NativeMessagingClient
     {
         AssertHelperConnected();
 
-        // A SelectLocation required call is required for the browser extension
+        // A SelectLocation call is required for the browser extension
         // to show the correct location
-        var source = new TaskCompletionSource<bool>();
-        Action handler = () => source.SetResult(true);
-        StatusUpdate += handler;
+        var selected = new SelectedLocation() {
+            id = args.id,
+            name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
+            is_country = !string.IsNullOrEmpty(args.country),
+            is_smart_location = args.is_default
+        };
 
-        Call("XVPN.SelectLocation", new SelectArgs() {
-            selected_location = new SelectedLocation() {
-                id = args.id,
-                name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
-                is_country = !string.IsNullOrEmpty(args.country),
-                is_smart_location = args.is_default
+        if (LatestStatus.selected_location.name != selected.name) {
+            var source = new TaskCompletionSource<bool>();
+            Action handler = () => source.SetResult(true);
+            StatusUpdate += handler;
+
+            Call("XVPN.SelectLocation", new SelectArgs() {
+                selected_location = new SelectedLocation() {
+                    id = args.id,
+                    name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
+                    is_country = !string.IsNullOrEmpty(args.country),
+                    is_smart_location = args.is_default
+                }
+            });
+
+            try {
+                await WithTimeout(source.Task);
+            } finally {
+                StatusUpdate -= handler;
             }
-        });
-
-        try {
-            await WithTimeout(source.Task);
-        } finally {
-            StatusUpdate -= handler;
         }
 
         Call("XVPN.Connect", args);
