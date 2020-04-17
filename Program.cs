@@ -122,6 +122,22 @@ class ExpressoCLI
     public static async Task<int> Main(string[] args)
     {
         var cli = new ExpressoCLI();
+
+        AppDomain.CurrentDomain.UnhandledException += (s, a) => {
+            if (a.ExceptionObject is Exception e) {
+                if (e.InnerException is System.Threading.ThreadAbortException) {
+                    // Woarkround for a bug in mono: https://github.com/mono/mono/issues/15418
+                    Logger.LogDebug($"Ignoring exception: {e.Message}");
+                    Environment.Exit(0);
+                } else {
+                    Arguments<ExpressoCLI>.WriteException(e, args, cli.verbose > 0, enableColors);
+                }
+            } else {
+                Logger.LogWarning($"Unknown unhandled exception object: {a.ExceptionObject}");
+            }
+            Environment.Exit(1);
+        };
+
         try {
             ArgumentsDefinition.Parse(cli, args);
 
@@ -295,7 +311,7 @@ class ExpressoCLI
                         selected = loc;
                         selectedPriority = 2;
                     // Name-match has lower priority
-                    } else if (selectedPriority < 1 && loc.name.Contains(location, StringComparison.OrdinalIgnoreCase)) {
+                    } else if (selectedPriority < 1 && loc.name.IndexOf(location, StringComparison.OrdinalIgnoreCase) >= 0) {
                         selected = loc;
                         selectedPriority = 1;
                     }
