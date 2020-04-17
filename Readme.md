@@ -28,7 +28,7 @@ expresso also comes with an [Alfred](http://alfredapp.com) workflow, which enabl
 # Usage
 
 ```
-expresso v1.0.1
+expresso v1.0.2
 
 USAGE: expresso [--help] [--version] [--verbose...] [--quiet] [--timeout <arg>] 
                 <action> 
