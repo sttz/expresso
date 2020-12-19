@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.1.0 (2020-12-19)
+* Enable changing connected location with `--change` or `-c`
+* Add `--random` option to connect to random location in country
+* Other minor fixes
+
 ### 1.0.2 (2020-04-17)
 * Fix timeout when connecting to the already selected location
 * Make project work with mono and provide Hombrew formula (in addition to cask)

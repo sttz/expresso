@@ -28,7 +28,7 @@ expresso also comes with an [Alfred](http://alfredapp.com) workflow, which enabl
 # Usage
 
 ```
-expresso v1.0.2
+expresso v1.1.0
 
 USAGE: expresso [--help] [--version] [--verbose...] [--quiet] [--timeout <arg>] 
                 <action> 
@@ -51,9 +51,11 @@ USAGE: expresso [options] locations
 ---- CONNECT:
      Connect to a VPN location 
 
-USAGE: expresso [options] connect [<location>] 
+USAGE: expresso [options] connect [--change] [--random] [<location>] 
 
 OPTIONS:
+ -c, --change     Change current location when already connected 
+     --random     Choose a random location in the given country 
  <location>       Location to connect to, either location id, country or 
                   keyword 
 
