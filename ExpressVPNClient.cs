@@ -443,6 +443,8 @@ public class ExpressVPNClient : NativeMessagingClient
                             info.selected_location = selectedLocation;
                             LatestStatus = info;
                             StatusUpdate?.Invoke();
+                        } else if (messageName == "WaitForNetworkReady") {
+                            // Ignore WaitForNetworkReady
                         } else {
                             Log.LogWarning($"Unhandled named message: {messageName}");
                         }
@@ -461,6 +463,9 @@ public class ExpressVPNClient : NativeMessagingClient
                     } else if (doc.TryGetValue("messages", out var _)) {
                         // handle messages
                     
+                    } else if (doc.TryGetValue("success", out var _)) {
+                        // Ignore useless success messages
+
                     } else {
                         Log.LogWarning($"Unhandled message: " + message);
                     }
