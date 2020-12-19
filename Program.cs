@@ -447,7 +447,7 @@ class ExpressoCLI
         public static AlfredItem FromLocation(ExpressVPNClient client, ExpressVPNClient.Location loc, bool withUid = true)
         {
             var prefix = "";
-            var action = $"connect {loc.id}";
+            var action = $"connect --change {loc.id}";
 
             var connectedId = client.LatestStatus.current_location.id;
             if (loc.id == connectedId) {
