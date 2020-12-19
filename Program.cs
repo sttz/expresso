@@ -46,6 +46,10 @@ class ExpressoCLI
     // -------- Connect --------
 
     /// <summary>
+    /// Change server if already connected.
+    /// </summary>
+    public bool changeConnection;
+    /// <summary>
     /// The VPN location to connect to.
     /// </summary>
     public string location;
@@ -94,6 +98,8 @@ class ExpressoCLI
 
                 .Action("connect", (t, a) => t.action = a)
                     .Description("Connect to a VPN location")
+                .Option((ExpressoCLI t, bool v) => t.changeConnection = v, "c", "change")
+                    .Description("Change current location when already connected")
                 .Option((ExpressoCLI t , string a) => t.location = a, 0)
                     .ArgumentName("<location>")
                     .Description("Location to connect to, either location id, country or keyword")
@@ -278,6 +284,16 @@ class ExpressoCLI
         }
 
         var args = new ExpressVPNClient.ConnectArgs();
+
+        if (client.LatestStatus.state == ExpressVPNClient.State.connected) {
+            if (!changeConnection) {
+                throw new Exception($"Already connected to '{client.LatestStatus.current_location.name}'.\n"
+                    + $"Use --change or -c to change the currently connected location.");
+            } else {
+                args.change_connected_location = true;
+            }
+        }
+
         // No location -> Connect to default location
         if (string.IsNullOrEmpty(location)) {
             if (string.IsNullOrEmpty(client.DefaultLocationId)) {

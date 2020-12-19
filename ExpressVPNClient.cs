@@ -308,33 +308,35 @@ public class ExpressVPNClient : NativeMessagingClient
     {
         AssertHelperConnected();
 
-        // A SelectLocation call is required for the browser extension
-        // to show the correct location
-        var selected = new SelectedLocation() {
-            id = args.id,
-            name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
-            is_country = !string.IsNullOrEmpty(args.country),
-            is_smart_location = args.is_default
-        };
+        if (LatestStatus.state != State.connected) {
+            // A SelectLocation call is required for the browser extension
+            // to show the correct location
+            var selected = new SelectedLocation() {
+                id = args.id,
+                name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
+                is_country = !string.IsNullOrEmpty(args.country),
+                is_smart_location = args.is_default
+            };
 
-        if (LatestStatus.selected_location.name != selected.name) {
-            var source = new TaskCompletionSource<bool>();
-            Action handler = () => source.SetResult(true);
-            StatusUpdate += handler;
+            if (LatestStatus.selected_location.name != selected.name) {
+                var source = new TaskCompletionSource<bool>();
+                Action handler = () => source.SetResult(true);
+                StatusUpdate += handler;
 
-            Call("XVPN.SelectLocation", new SelectArgs() {
-                selected_location = new SelectedLocation() {
-                    id = args.id,
-                    name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
-                    is_country = !string.IsNullOrEmpty(args.country),
-                    is_smart_location = args.is_default
+                Call("XVPN.SelectLocation", new SelectArgs() {
+                    selected_location = new SelectedLocation() {
+                        id = args.id,
+                        name = string.IsNullOrEmpty(args.country) ? args.name : args.country,
+                        is_country = !string.IsNullOrEmpty(args.country),
+                        is_smart_location = args.is_default
+                    }
+                });
+
+                try {
+                    await WithTimeout(source.Task);
+                } finally {
+                    StatusUpdate -= handler;
                 }
-            });
-
-            try {
-                await WithTimeout(source.Task);
-            } finally {
-                StatusUpdate -= handler;
             }
         }
 
@@ -345,15 +347,26 @@ public class ExpressVPNClient : NativeMessagingClient
         Action<float> progressHandler = (p) => progress = p;
         ConnectionProgress += progressHandler;
 
+        var lastStateWasConnected = (LatestStatus.state == State.connected);
         var start = DateTimeOffset.Now.ToUnixTimeMilliseconds();
         while (
-            (LatestStatus.state == State.ready || LatestStatus.state == State.connecting)
+            (
+                LatestStatus.state == State.ready 
+                || LatestStatus.state == State.connecting
+                || LatestStatus.state == State.disconnecting
+                || (lastStateWasConnected && LatestStatus.state == State.connected)
+            )
             && (DateTimeOffset.Now.ToUnixTimeMilliseconds() - start) < timeout
         ) {
-            await Task.Delay(200);
+            await Task.Delay(20);
             if (progress != null) {
                 Log.LogInformation($"Connecting... {progress:0.##}%");
                 progress = null;
+            }
+            if (lastStateWasConnected &&
+                    (LatestStatus.state != State.connected && LatestStatus.state != State.disconnecting)
+            ) {
+                lastStateWasConnected = false;
             }
         }
         ConnectionProgress -= progressHandler;
