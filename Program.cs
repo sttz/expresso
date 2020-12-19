@@ -50,6 +50,10 @@ class ExpressoCLI
     /// </summary>
     public bool changeConnection;
     /// <summary>
+    /// Randomize location inside of countries.
+    /// </summary>
+    public bool randomize;
+    /// <summary>
     /// The VPN location to connect to.
     /// </summary>
     public string location;
@@ -100,6 +104,8 @@ class ExpressoCLI
                     .Description("Connect to a VPN location")
                 .Option((ExpressoCLI t, bool v) => t.changeConnection = v, "c", "change")
                     .Description("Change current location when already connected")
+                .Option((ExpressoCLI t, bool v) => t.randomize = v, "random")
+                    .Description("Choose a random location in the given country")
                 .Option((ExpressoCLI t , string a) => t.location = a, 0)
                     .ArgumentName("<location>")
                     .Description("Location to connect to, either location id, country or keyword")
@@ -312,10 +318,17 @@ class ExpressoCLI
 
         } else {
             // Connect to any location in a country
-            var countryLoc = client.Locations.FirstOrDefault(l => l.country == location || l.country_code == location);
-            if (countryLoc.country != null) {
-                Logger.LogInformation($"Connecting to best location in country '{countryLoc.country}'");
-                args.country = countryLoc.country;
+            var countryLocs = client.Locations.Where(l => l.country == location || l.country_code == location);
+            if (countryLocs.Any()) {
+                var countryLoc = countryLocs.Skip(new Random().Next(countryLocs.Count() - 1)).First();
+                if (randomize) {
+                    Logger.LogInformation($"Connecting to random location in country '{countryLoc.country}'");
+                    args.id = countryLoc.id;
+                    args.name = countryLoc.name;
+                } else {
+                    Logger.LogInformation($"Connecting to default location in country '{countryLoc.country}'");
+                    args.country = countryLoc.country;
+                }
             
             // Look up specific location
             } else {
