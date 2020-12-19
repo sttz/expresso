@@ -167,6 +167,10 @@ public class ExpressVPNClient : NativeMessagingClient
     /// </summary>
     public event Action StatusUpdate;
     /// <summary>
+    /// Event raised when the status has been updated by the XVPN.GetStatus command.
+    /// </summary>
+    public event Action FullStatusUpdate;
+    /// <summary>
     /// Event raised while connecting to a VPN location with the connection progress.
     /// </summary>
     /// <remarks>
@@ -250,14 +254,14 @@ public class ExpressVPNClient : NativeMessagingClient
 
         var source = new TaskCompletionSource<bool>();
         Action handler = () => source.SetResult(true);
-        StatusUpdate += handler;
+        FullStatusUpdate += handler;
 
         Call("XVPN.GetStatus", new NoParams());
 
         try {
             await WithTimeout(source.Task);
         } finally {
-            StatusUpdate -= handler;
+            FullStatusUpdate -= handler;
         }
     }
 
@@ -416,6 +420,7 @@ public class ExpressVPNClient : NativeMessagingClient
                         var status = JsonConvert.DeserializeObject<StatusResult>(message);
                         LatestStatus = status.info;
                         StatusUpdate?.Invoke();
+                        FullStatusUpdate?.Invoke();
                     
                     } else if (doc.TryGetValue("name", out var name)) {
                         var messageName = (string)name;
