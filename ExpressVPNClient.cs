@@ -404,7 +404,7 @@ public class ExpressVPNClient : NativeMessagingClient
                 try {
                     var doc = JObject.Parse(message);
                     if (doc.TryGetValue("error", out var error)) {
-                        Log.LogError((string)error);
+                        Log.LogError(error.ToString());
                         // handle error
                     
                     } else if (doc.TryGetValue("connected", out var connected) && (bool)connected) {
