@@ -1,5 +1,6 @@
 bin
 obj
 .vscode
+.config
 Releases
 expresso

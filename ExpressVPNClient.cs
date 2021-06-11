@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace sttz.expresso
 {
@@ -12,6 +13,8 @@ namespace sttz.expresso
 /// </summary>
 public class ExpressVPNClient : NativeMessagingClient
 {
+
+    
     /// <summary>
     /// ExpressVPN state.
     /// </summary>
@@ -212,12 +215,16 @@ public class ExpressVPNClient : NativeMessagingClient
     /// </summary>
     public event Action LocationsUpdated;
 
+    public static readonly string DefaultManifestName = 
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "com.expressvpn.helper.firefox" 
+        : "com.expressvpn.helper";
+
     /// <summary>
     /// Create a new client and try to connect to the helper.
     /// </summary>
     /// <param name="logger">The instance to use for logging</param>
     /// <returns></returns>
-    public ExpressVPNClient(ILogger logger) : base("com.expressvpn.helper", logger)
+    public ExpressVPNClient(ILogger logger) : base(DefaultManifestName, logger)
     {
         Task.Run(Process);
     }
