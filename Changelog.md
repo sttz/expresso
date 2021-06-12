@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.0 (2021-06-12)
+* Add Windows support (@lord-ne)
+* Switch from CoreRT to .Net 6 preview for single-file builds (much smaller but a bit slower)
+
 ### 1.1.0 (2020-12-19)
 * Enable changing connected location with `--change` or `-c`
 * Add `--random` option to connect to random location in country
