@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -21,14 +22,29 @@ public class NativeMessagingClient
     /// <summary>
     /// Paths where the native messaging manifests are stored.
     /// </summary>
-    static readonly string[] manifestBasePaths = new string[] {
-        "~/Library/Application Support/Mozilla/NativeMessagingHosts",
-        "/Library/Application Support/Mozilla/NativeMessagingHosts",
-        // These are used on Linux:
-        // "/usr/lib/mozilla/native-messaging-hosts",
-        // "/usr/lib64/mozilla/native-messaging-hosts",
-        // "~/.mozilla/native-messaging-hosts",
-    };
+    static readonly string[] manifestBasePaths = 
+        RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? new string[] {
+                "~/Library/Application Support/Mozilla/NativeMessagingHosts",
+                "/Library/Application Support/Mozilla/NativeMessagingHosts",
+            } :
+        RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? new string[] {
+                "/usr/lib/mozilla/native-messaging-hosts",
+                "/usr/lib64/mozilla/native-messaging-hosts",
+                "~/.mozilla/native-messaging-hosts", 
+            } :
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new string[] {
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "/ExpressVPN/expressvpnd",
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "/ExpressVPN/expressvpnd",
+            } : new string[] { // If we can't detect the OS, try all the folders
+                "~/Library/Application Support/Mozilla/NativeMessagingHosts",
+                "/Library/Application Support/Mozilla/NativeMessagingHosts",
+                "/usr/lib/mozilla/native-messaging-hosts",
+                "/usr/lib64/mozilla/native-messaging-hosts",
+                "~/.mozilla/native-messaging-hosts", 
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "/ExpressVPN/expressvpnd",
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "/ExpressVPN/expressvpnd",
+            };
+    
 
     /// <summary>
     /// Extension of the native messaging manifest file.
