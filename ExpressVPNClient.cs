@@ -142,7 +142,7 @@ public class ExpressVPNClient : NativeMessagingClient
     /// <summary>
     /// Timeout waiting for response from helper (ms).
     /// </summary>
-    public int ResponseTimeout { get; set; } = 500;
+    public int ResponseTimeout { get; set; } = 5000;
 
     /// <summary>
     /// Wether we're connected to the helper.
@@ -237,7 +237,7 @@ public class ExpressVPNClient : NativeMessagingClient
     /// the ExpressVPN helper signals it's ready.
     /// </remarks>
     /// <param name="timeout">Timeout for waiting for the connection</param>
-    public async Task WaitForConnection(int timeout = 1000)
+    public async Task WaitForConnection(int timeout = 10000)
     {
         if (IsConnectedToHelper) return;
 
