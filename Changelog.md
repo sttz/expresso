@@ -1,5 +1,8 @@
 # Changelog
 
+### 1.2.1 (2021-06-15)
+* Increase connection timeout for Windows (@lord-ne)
+
 ### 1.2.0 (2021-06-12)
 * Add Windows support (@lord-ne)
 * Switch from CoreRT to .Net 6 preview for single-file builds (much smaller but a bit slower)

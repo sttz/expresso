@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup Label="Package">
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Authors>Adrian Stutz (sttz.ch)</Authors>
     <Product>expresso</Product>
     <Description>CLI to control the ExpressVPN app</Description>
