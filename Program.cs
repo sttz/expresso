@@ -318,7 +318,10 @@ class ExpressoCLI
 
         } else {
             // Connect to any location in a country
-            var countryLocs = client.Locations.Where(l => l.country == location || l.country_code == location);
+            var countryLocs = client.Locations.Where(l => 
+                string.Equals(l.country, location, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(l.country_code, location, StringComparison.OrdinalIgnoreCase)
+            );
             if (countryLocs.Any()) {
                 var countryLoc = countryLocs.Skip(new Random().Next(countryLocs.Count() - 1)).First();
                 if (randomize) {
