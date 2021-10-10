@@ -54,6 +54,10 @@ class ExpressoCLI
     /// </summary>
     public bool randomize;
     /// <summary>
+    /// Disconnect when already connected to the given location.
+    /// </summary>
+    public bool toggle;
+    /// <summary>
     /// The VPN location to connect to.
     /// </summary>
     public string location;
@@ -106,6 +110,8 @@ class ExpressoCLI
                     .Description("Change current location when already connected")
                 .Option((ExpressoCLI t, bool v) => t.randomize = v, "random")
                     .Description("Choose a random location in the given country")
+                .Option((ExpressoCLI t, bool v) => t.toggle = v, "toggle")
+                    .Description("Disconnect instead when already connected (to the given location with --change)")
                 .Option((ExpressoCLI t , string a) => t.location = a, 0)
                     .ArgumentName("<location>")
                     .Description("Location to connect to, either location id, country or keyword")
@@ -291,16 +297,8 @@ class ExpressoCLI
 
         var args = new ExpressVPNClient.ConnectArgs();
 
-        if (client.LatestStatus.state == ExpressVPNClient.State.connected) {
-            if (!changeConnection) {
-                throw new Exception($"Already connected to '{client.LatestStatus.current_location.name}'.\n"
-                    + $"Use --change or -c to change the currently connected location.");
-            } else {
-                args.change_connected_location = true;
-            }
-        }
-
         // No location -> Connect to default location
+        ExpressVPNClient.Location connectCountry = default;
         if (string.IsNullOrEmpty(location)) {
             if (string.IsNullOrEmpty(client.DefaultLocationId)) {
                 throw new Exception("No default location returned");
@@ -323,14 +321,14 @@ class ExpressoCLI
                 || string.Equals(l.country_code, location, StringComparison.OrdinalIgnoreCase)
             );
             if (countryLocs.Any()) {
-                var countryLoc = countryLocs.Skip(new Random().Next(countryLocs.Count() - 1)).First();
+                connectCountry = countryLocs.Skip(new Random().Next(countryLocs.Count() - 1)).First();
                 if (randomize) {
-                    Logger.LogInformation($"Connecting to random location in country '{countryLoc.country}'");
-                    args.id = countryLoc.id;
-                    args.name = countryLoc.name;
+                    Logger.LogInformation($"Connecting to random location in country '{connectCountry.country}'");
+                    args.id = connectCountry.id;
+                    args.name = connectCountry.name;
                 } else {
-                    Logger.LogInformation($"Connecting to default location in country '{countryLoc.country}'");
-                    args.country = countryLoc.country;
+                    Logger.LogInformation($"Connecting to default location in country '{connectCountry.country}'");
+                    args.country = connectCountry.country;
                 }
             
             // Look up specific location
@@ -354,6 +352,24 @@ class ExpressoCLI
                 Logger.LogInformation($"Connecting to location '{selected.name}'");
                 args.id = selected.id;
                 args.name = selected.name;
+            }
+        }
+
+        if (client.LatestStatus.state == ExpressVPNClient.State.connected) {
+            var current = client.LatestStatus.current_location;
+
+            if (toggle && (!changeConnection || current.id == args.id || (connectCountry.country != null && current.country == connectCountry.country))) {
+                // Toggle: Disconnect instead of already connected
+                Logger.LogInformation($"Already connected to '{current.name}', disconnecting instead");
+                await Disconnect();
+                return;
+            }
+
+            if (!changeConnection) {
+                throw new Exception($"Already connected to '{current.name}'.\n"
+                    + $"Use --change or -c to change the currently connected location.");
+            } else {
+                args.change_connected_location = true;
             }
         }
 
