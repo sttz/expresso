@@ -1,5 +1,10 @@
 # Changelog
 
+### 1.3.0 (2021-10-10)
+* Added `status` command
+* Added `--toggle` option to `connect` command
+* Fixed country name and code not matched case-insensitively in `connect`
+
 ### 1.2.1 (2021-06-15)
 * Increase connection timeout for Windows (@lord-ne)
 
