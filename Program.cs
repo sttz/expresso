@@ -104,6 +104,9 @@ class ExpressoCLI
                 .Action("locations", (t, a) => t.action = a)
                     .Description("List all available VPN locations")
 
+                .Action("status", (t, a) => t.action = a)
+                    .Description("Show the current VPN connection status")
+
                 .Action("connect", (t, a) => t.action = a)
                     .Description("Connect to a VPN location")
                 .Option((ExpressoCLI t, bool v) => t.changeConnection = v, "c", "change")
@@ -172,6 +175,9 @@ class ExpressoCLI
             switch (cli.action) {
                 case "locations":
                     await cli.Locations();
+                    break;
+                case "status":
+                    cli.Status();
                     break;
                 case "connect":
                     await cli.Connect();
@@ -285,6 +291,18 @@ class ExpressoCLI
                 lastCountry = loc.country;
             }
             Console.WriteLine($"- {loc.name} ({loc.id})");
+        }
+    }
+
+    void Status()
+    {
+        if (client.LatestStatus.state == ExpressVPNClient.State.connected) {
+            var current = client.LatestStatus.current_location;
+            Console.WriteLine($"VPN connected to '{current.name}' ({current.id})");
+        } else if (client.LatestStatus.state == ExpressVPNClient.State.ready) {
+            Console.WriteLine("VPN not connected");
+        } else {
+            Console.WriteLine($"ExpressVPN in exceptional state: {client.LatestStatus.state}");
         }
     }
 
